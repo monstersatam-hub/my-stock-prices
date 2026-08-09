@@ -91,6 +91,10 @@ var TABS = [
 var PILLAR_MAX = {biz:25, fin:20, growth:15, val:15, tech:10, mgmt:10, macro:5};
 var PILLAR_LABELS = {biz:'Business', fin:'Financial', growth:'Growth', val:'Valuation', tech:'Technical', mgmt:'Mgmt', macro:'Macro'};
 
+var DEFAULT_SUPABASE_URL = 'https://iniedocieqvoxrgikhms.supabase.co';
+var DEFAULT_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImluaWVkb2NpZXF2b3hyZ2lraG1zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYyNDYyOTEsImV4cCI6MjEwMTgyMjI5MX0.--4COxcTBcC7a8TIG_cL1aL-VBe1boFUs7DuAyE2QE4';
+var DEFAULT_LIVE_FEED_URL = 'https://raw.githubusercontent.com/monstersatam-hub/my-stock-prices/refs/heads/main/prices.json';
+
 var SEED_WATCHLIST = [
   {id:'nvda', ticker:'NVDA', market:'US', type:'Growth', pillars:{biz:23,fin:19,growth:14,val:12,tech:8,mgmt:7,macro:5}},
   {id:'msft', ticker:'MSFT', market:'US', type:'Core', pillars:{biz:22,fin:17,growth:12,val:10,tech:6,mgmt:9,macro:5}},
@@ -116,7 +120,7 @@ var SEED_JOURNAL = [
    risk:'MSFT และ V ให้ Risk/Reward ต่ำกว่า 1:2 ที่ราคาปัจจุบัน ควรรอ Pullback ก่อนเพิ่ม Position'}
 ];
 
-var state = {regime:null, watchlist:null, portfolio:null, journal:null, liveFeedUrl:'', liveData:{}, liveUpdated:'', entryExit:null, supabaseUrl:'', supabaseKey:''};
+var state = {regime:null, watchlist:null, portfolio:null, journal:null, liveFeedUrl:'', liveData:{}, liveUpdated:'', entryExit:null, supabaseUrl:DEFAULT_SUPABASE_URL, supabaseKey:DEFAULT_SUPABASE_KEY};
 
 function getEntryExitFor(id){
   if(!state.entryExit) state.entryExit = {};
@@ -130,8 +134,29 @@ function fmt(n, d){ d = d===undefined?2:d; var v = Number(n); if(isNaN(v)) v=0; 
 function clamp(v, lo, hi){ v = Number(v); if(isNaN(v)) v=0; return Math.max(lo, Math.min(hi, v)); }
 
 var HAS_CLAUDE_STORAGE = !!(window.storage && typeof window.storage.get === 'function');
+var __supaClient = null;
+
+function getSupabaseClient(){
+  if(!state.supabaseUrl || !state.supabaseKey) return null;
+  if(!window.supabase || typeof window.supabase.createClient !== 'function') return null;
+  if(!__supaClient){
+    __supaClient = window.supabase.createClient(state.supabaseUrl, state.supabaseKey);
+  }
+  return __supaClient;
+}
 
 async function loadKey(key, seed){
+  var client = getSupabaseClient();
+  if(client){
+    try{
+      var sres = await client.from('app_state').select('value').eq('key', key).maybeSingle();
+      if(sres.error) throw new Error(sres.error.message);
+      if(sres.data && sres.data.value !== undefined && sres.data.value !== null) return sres.data.value;
+      return JSON.parse(JSON.stringify(seed));
+    }catch(e){
+      console.error('supabase load failed, falling back:', key, e);
+    }
+  }
   if(!HAS_CLAUDE_STORAGE){
     try{
       var raw = localStorage.getItem('ledger_'+key);
@@ -150,6 +175,16 @@ async function loadKey(key, seed){
   }
 }
 async function saveKey(key, val){
+  var client = getSupabaseClient();
+  if(client){
+    try{
+      var sres = await client.from('app_state').upsert({key:key, value:val, updated_at:new Date().toISOString()}, {onConflict:'key'});
+      if(sres.error) throw new Error(sres.error.message);
+      return;
+    }catch(e){
+      console.error('supabase save failed, falling back:', key, e);
+    }
+  }
   if(!HAS_CLAUDE_STORAGE){
     try{ localStorage.setItem('ledger_'+key, JSON.stringify(val)); }
     catch(e){ console.error('local save failed', key, e); }
@@ -289,6 +324,10 @@ window.__ledgerAddStock = function(){
   renderTabContent();
 };
 
+function supaConfiguredCheck(){
+  return !!(window.supabase && typeof window.supabase.createClient === 'function');
+}
+
 function viewEntryExit(){
   var stillExists = state.watchlist.some(function(s){ return s.id===activeEntryStockId; });
   if((!activeEntryStockId || !stillExists) && state.watchlist.length) activeEntryStockId = state.watchlist[0].id;
@@ -308,7 +347,6 @@ function viewEntryExit(){
   var risk = rec.rr.entryLow - rec.rr.stop;
   var reward = rec.rr.target - rec.rr.entryLow;
   var rr = (risk>0 && reward>0) ? (reward/risk) : 0;
-  var supaConfigured = !!(state.supabaseUrl && state.supabaseKey);
   return ''+
   '<div class="card"><span class="lbl">เลือกหุ้นจาก Watchlist</span>'+
     '<select class="field" onchange="window.__ledgerSelectStock(this.value)">'+options+'</select></div>'+
@@ -331,11 +369,11 @@ function viewEntryExit(){
     '</div>'+
     '<div class="total-line">Risk/Reward = <span class="total-num">'+(rr>0?fmt(rr,2):'—')+'</span> : 1 '+(rr>0&&rr<2?'<span class="warn-badge">ต่ำกว่าเกณฑ์ 1:2</span>':'')+'</div>'+
     '<div class="card-rule"></div>'+
-    (supaConfigured ?
+    (supaConfiguredCheck() ?
       '<button class="btn" onclick="window.__ledgerSyncAlertToSupabase()">ซิงค์เข้า Telegram Alert</button>'+
       '<p class="ledger-sub" id="supabase-sync-status" style="margin-top:6px;"></p>'
       :
-      '<p class="ledger-sub">ยังไม่ได้ตั้งค่า Supabase — ไปที่แท็บ Portfolio เพื่อใส่ URL/Key ก่อน ถึงจะ Sync เข้า Telegram Alert ได้</p>')+
+      '<p class="ledger-sub">เชื่อมต่อ Supabase ไม่สำเร็จ (เช็คอินเทอร์เน็ต หรือลองรีเฟรชหน้า)</p>')+
   '</div>'+
   '<div class="card"><div class="card-head"><span class="lbl">Exit Score</span><span class="stamp '+xv.cls+'">'+xv.label+'</span></div>'+
     '<div class="total-num">'+xtotal+' / 50</div><div class="card-rule"></div>'+
@@ -378,15 +416,6 @@ window.__ledgerRrUpdate = function(k,v){
   renderTabContent();
 };
 
-function getSupabaseClient(){
-  if(!state.supabaseUrl || !state.supabaseKey) return null;
-  if(!window.supabase || typeof window.supabase.createClient !== 'function') return null;
-  if(!window.__ledgerSupaClient){
-    window.__ledgerSupaClient = window.supabase.createClient(state.supabaseUrl, state.supabaseKey);
-  }
-  return window.__ledgerSupaClient;
-}
-
 window.__ledgerSyncAlertToSupabase = async function(){
   var statusEl = document.getElementById('supabase-sync-status');
   var client = getSupabaseClient();
@@ -419,15 +448,6 @@ function viewPortfolio(){
   var totalHold = 0, totalCost = 0;
   state.portfolio.forEach(function(p){ totalHold += Number(p.holding)||0; totalCost += Number(p.cost)||0; });
   var totalPl = totalCost>0 ? ((totalHold-totalCost)/totalCost*100) : 0;
-  var supaCard = '<div class="card">'+
-    '<span class="lbl">Supabase URL + Anon Key (สำหรับ Sync Entry Alert)</span>'+
-    '<div class="row" style="margin-top:6px;">'+
-      '<input class="field" type="text" id="supabase-url" placeholder="https://xxxx.supabase.co" value="'+(state.supabaseUrl||'')+'" style="flex:2;min-width:180px;">'+
-      '<input class="field" type="text" id="supabase-key" placeholder="anon public key" value="'+(state.supabaseKey||'')+'" style="flex:2;min-width:180px;">'+
-      '<button class="btn" style="flex:1;min-width:100px;" onclick="window.__ledgerSaveSupabaseConfig()">บันทึก</button>'+
-    '</div>'+
-    '<p class="ledger-sub" style="margin-top:6px;">ใช้ Anon Public Key เท่านั้น ห้ามใส่ Service Role Key ที่นี่เด็ดขาด</p>'+
-  '</div>';
   var settingsCard = '<div class="card">'+
     '<span class="lbl">Live Feed URL (JSON จาก GitHub Actions)</span>'+
     '<div class="row" style="margin-top:6px;">'+
@@ -459,18 +479,8 @@ function viewPortfolio(){
       '<div class="total-line">P/L: <span class="total-num" style="color:'+(pl>=0?'#2E6F52':'#9C3B2E')+';">'+(pl>=0?'+':'')+fmt(pl,2)+'%</span></div>'+
     '</div>';
   }).join('');
-  return supaCard + settingsCard + summary + cards + '<button class="btn-add" onclick="window.__ledgerAddPf()">+ เพิ่ม Holding ใหม่</button>';
+  return settingsCard + summary + cards + '<button class="btn-add" onclick="window.__ledgerAddPf()">+ เพิ่ม Holding ใหม่</button>';
 }
-window.__ledgerSaveSupabaseConfig = function(){
-  var urlEl = document.getElementById('supabase-url');
-  var keyEl = document.getElementById('supabase-key');
-  state.supabaseUrl = urlEl ? urlEl.value.trim() : '';
-  state.supabaseKey = keyEl ? keyEl.value.trim() : '';
-  window.__ledgerSupaClient = null;
-  saveKey('supabaseUrl', state.supabaseUrl);
-  saveKey('supabaseKey', state.supabaseKey);
-  renderTabContent();
-};
 async function doSync(url){
   if(!url) return {ok:false, msg:'no url'};
   try{
@@ -580,7 +590,7 @@ window.__ledgerReset = function(){
   state.watchlist = JSON.parse(JSON.stringify(SEED_WATCHLIST));
   state.portfolio = JSON.parse(JSON.stringify(SEED_PORTFOLIO));
   state.journal = JSON.parse(JSON.stringify(SEED_JOURNAL));
-  state.liveFeedUrl = '';
+  state.liveFeedUrl = DEFAULT_LIVE_FEED_URL;
   state.liveData = {};
   state.liveUpdated = '';
   state.entryExit = {};
@@ -588,7 +598,7 @@ window.__ledgerReset = function(){
   saveKey('watchlist', state.watchlist);
   saveKey('portfolio', state.portfolio);
   saveKey('journal', state.journal);
-  saveKey('liveFeedUrl', '');
+  saveKey('liveFeedUrl', DEFAULT_LIVE_FEED_URL);
   saveKey('livePricesCache', {prices:{}, updated:''});
   saveKey('entryExit', {});
   renderTabRail();
@@ -600,10 +610,8 @@ async function init(){
   state.watchlist = await loadKey('watchlist', SEED_WATCHLIST);
   state.portfolio = await loadKey('portfolio', SEED_PORTFOLIO);
   state.journal = await loadKey('journal', SEED_JOURNAL);
-  state.liveFeedUrl = await loadKey('liveFeedUrl', '');
+  state.liveFeedUrl = await loadKey('liveFeedUrl', DEFAULT_LIVE_FEED_URL);
   state.entryExit = await loadKey('entryExit', {});
-  state.supabaseUrl = await loadKey('supabaseUrl', '');
-  state.supabaseKey = await loadKey('supabaseKey', '');
   var cache = await loadKey('livePricesCache', {prices:{}, updated:''});
   state.liveData = cache.prices || {};
   state.liveUpdated = cache.updated || '';
@@ -611,7 +619,8 @@ async function init(){
   renderTabContent();
   var modeEl = document.getElementById('storage-mode-note');
   if(modeEl){
-    modeEl.textContent = HAS_CLAUDE_STORAGE ? 'บันทึกในบัญชี Claude — เปิดจากอุปกรณ์ไหนก็เห็นข้อมูลเดิม' : 'บันทึกในเบราว์เซอร์นี้ (Local) — ข้อมูลจะอยู่เฉพาะไฟล์นี้บนเครื่องนี้เท่านั้น';
+    var supaOk = !!(window.supabase && typeof window.supabase.createClient === 'function');
+    modeEl.textContent = supaOk ? 'บันทึกผ่าน Supabase — เปิดจากอุปกรณ์ไหนก็เห็นข้อมูลเดิม' : (HAS_CLAUDE_STORAGE ? 'บันทึกในบัญชี Claude — เปิดจากอุปกรณ์ไหนก็เห็นข้อมูลเดิม' : 'บันทึกในเบราว์เซอร์นี้ (Local) — เชื่อม Supabase ไม่สำเร็จ ข้อมูลจะอยู่แค่เครื่องนี้');
   }
   if(state.liveFeedUrl){
     doSync(state.liveFeedUrl).then(function(){ renderTabContent(); });
