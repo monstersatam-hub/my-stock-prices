@@ -115,12 +115,15 @@ var SEED_JOURNAL = [
    risk:'MSFT และ V ให้ Risk/Reward ต่ำกว่า 1:2 ที่ราคาปัจจุบัน ควรรอ Pullback ก่อนเพิ่ม Position'}
 ];
 
-var state = {regime:null, watchlist:null, portfolio:null, journal:null, liveFeedUrl:'', liveData:{}, liveUpdated:''};
+var state = {regime:null, watchlist:null, portfolio:null, journal:null, liveFeedUrl:'', liveData:{}, liveUpdated:'', entryExit:null};
+
+function getEntryExitFor(id){
+  if(!state.entryExit) state.entryExit = {};
+  if(!state.entryExit[id]) state.entryExit[id] = {entry:{val:0,tech:0,cat:0,mkt:0}, exit:{val:0,thesis:0,opp:0}, rr:{entry:0,target:0,stop:0}};
+  return state.entryExit[id];
+}
 var activeTab = 'regime';
 var activeEntryStockId = null;
-var entryScores = {val:0, tech:0, cat:0, mkt:0};
-var exitScores = {val:0, thesis:0, opp:0};
-var rrCalc = {entry:0, target:0, stop:0};
 
 function fmt(n, d){ d = d===undefined?2:d; var v = Number(n); if(isNaN(v)) v=0; return v.toLocaleString('en-US',{minimumFractionDigits:d, maximumFractionDigits:d}); }
 function clamp(v, lo, hi){ v = Number(v); if(isNaN(v)) v=0; return Math.max(lo, Math.min(hi, v)); }
@@ -290,12 +293,13 @@ function viewEntryExit(){
   var options = state.watchlist.map(function(s){
     return '<option value="'+s.id+'"'+(s.id===activeEntryStockId?' selected':'')+'>'+s.ticker+'</option>';
   }).join('');
-  var etotal = clamp(entryScores.val,0,15)+clamp(entryScores.tech,0,10)+clamp(entryScores.cat,0,10)+clamp(entryScores.mkt,0,5);
+  var rec = getEntryExitFor(activeEntryStockId);
+  var etotal = clamp(rec.entry.val,0,15)+clamp(rec.entry.tech,0,10)+clamp(rec.entry.cat,0,10)+clamp(rec.entry.mkt,0,5);
   var ev = entryVerdict(etotal);
-  var xtotal = clamp(exitScores.val,0,15)+clamp(exitScores.thesis,0,25)+clamp(exitScores.opp,0,10);
+  var xtotal = clamp(rec.exit.val,0,15)+clamp(rec.exit.thesis,0,25)+clamp(rec.exit.opp,0,10);
   var xv = exitVerdict(xtotal);
-  var risk = rrCalc.entry - rrCalc.stop;
-  var reward = rrCalc.target - rrCalc.entry;
+  var risk = rec.rr.entry - rec.rr.stop;
+  var reward = rec.rr.target - rec.rr.entry;
   var rr = (risk>0 && reward>0) ? (reward/risk) : 0;
   return ''+
   '<div class="card"><span class="lbl">เลือกหุ้นจาก Watchlist</span>'+
@@ -303,27 +307,27 @@ function viewEntryExit(){
   '<div class="card"><div class="card-head"><span class="lbl">Entry Score</span><span class="stamp '+ev.cls+'">'+ev.label+'</span></div>'+
     '<div class="total-num">'+etotal+' / 40</div><div class="card-rule"></div>'+
     '<div class="row">'+
-      entryField('val','Valuation Entry',15,entryScores.val)+
-      entryField('tech','Technical Setup',10,entryScores.tech)+
+      entryField('val','Valuation Entry',15,rec.entry.val)+
+      entryField('tech','Technical Setup',10,rec.entry.tech)+
     '</div><div class="row" style="margin-top:8px;">'+
-      entryField('cat','Catalyst',10,entryScores.cat)+
-      entryField('mkt','Market Condition',5,entryScores.mkt)+
+      entryField('cat','Catalyst',10,rec.entry.cat)+
+      entryField('mkt','Market Condition',5,rec.entry.mkt)+
     '</div></div>'+
   '<div class="card"><span class="lbl">คำนวณ Risk / Reward</span>'+
     '<div class="row" style="margin-top:6px;">'+
-      rrField('entry','ราคาเข้าซื้อ',rrCalc.entry)+
-      rrField('target','เป้าหมาย',rrCalc.target)+
-      rrField('stop','Stop Loss',rrCalc.stop)+
+      rrField('entry','ราคาเข้าซื้อ',rec.rr.entry)+
+      rrField('target','เป้าหมาย',rec.rr.target)+
+      rrField('stop','Stop Loss',rec.rr.stop)+
     '</div>'+
     '<div class="total-line">Risk/Reward = <span class="total-num">'+(rr>0?fmt(rr,2):'—')+'</span> : 1 '+(rr>0&&rr<2?'<span class="warn-badge">ต่ำกว่าเกณฑ์ 1:2</span>':'')+'</div>'+
   '</div>'+
   '<div class="card"><div class="card-head"><span class="lbl">Exit Score</span><span class="stamp '+xv.cls+'">'+xv.label+'</span></div>'+
     '<div class="total-num">'+xtotal+' / 50</div><div class="card-rule"></div>'+
     '<div class="row">'+
-      exitField('val','Valuation แพงแค่ไหน',15,exitScores.val)+
-      exitField('thesis','Thesis เปลี่ยนแค่ไหน',25,exitScores.thesis)+
+      exitField('val','Valuation แพงแค่ไหน',15,rec.exit.val)+
+      exitField('thesis','Thesis เปลี่ยนแค่ไหน',25,rec.exit.thesis)+
     '</div><div class="row" style="margin-top:8px;">'+
-      exitField('opp','มีโอกาสดีกว่าไหม',10,exitScores.opp)+
+      exitField('opp','มีโอกาสดีกว่าไหม',10,rec.exit.opp)+
     '</div></div>';
 }
 function entryField(key,label,max,val){
@@ -339,9 +343,24 @@ function rrField(key,label,val){
     '<input class="field" type="number" step="0.01" value="'+val+'" onchange="window.__ledgerRrUpdate(\''+key+'\',this.value)"></div>';
 }
 window.__ledgerSelectStock = function(id){ activeEntryStockId = id; renderTabContent(); };
-window.__ledgerEntryUpdate = function(k,v,max){ entryScores[k] = clamp(v,0,max); renderTabContent(); };
-window.__ledgerExitUpdate = function(k,v,max){ exitScores[k] = clamp(v,0,max); renderTabContent(); };
-window.__ledgerRrUpdate = function(k,v){ rrCalc[k] = Number(v)||0; renderTabContent(); };
+window.__ledgerEntryUpdate = function(k,v,max){
+  var rec = getEntryExitFor(activeEntryStockId);
+  rec.entry[k] = clamp(v,0,max);
+  saveKey('entryExit', state.entryExit);
+  renderTabContent();
+};
+window.__ledgerExitUpdate = function(k,v,max){
+  var rec = getEntryExitFor(activeEntryStockId);
+  rec.exit[k] = clamp(v,0,max);
+  saveKey('entryExit', state.entryExit);
+  renderTabContent();
+};
+window.__ledgerRrUpdate = function(k,v){
+  var rec = getEntryExitFor(activeEntryStockId);
+  rec.rr[k] = Number(v)||0;
+  saveKey('entryExit', state.entryExit);
+  renderTabContent();
+};
 
 function viewPortfolio(){
   var totalHold = 0, totalCost = 0;
@@ -491,12 +510,14 @@ window.__ledgerReset = function(){
   state.liveFeedUrl = '';
   state.liveData = {};
   state.liveUpdated = '';
+  state.entryExit = {};
   saveKey('regime', state.regime);
   saveKey('watchlist', state.watchlist);
   saveKey('portfolio', state.portfolio);
   saveKey('journal', state.journal);
   saveKey('liveFeedUrl', '');
   saveKey('livePricesCache', {prices:{}, updated:''});
+  saveKey('entryExit', {});
   renderTabRail();
   renderTabContent();
 };
@@ -507,6 +528,7 @@ async function init(){
   state.portfolio = await loadKey('portfolio', SEED_PORTFOLIO);
   state.journal = await loadKey('journal', SEED_JOURNAL);
   state.liveFeedUrl = await loadKey('liveFeedUrl', '');
+  state.entryExit = await loadKey('entryExit', {});
   var cache = await loadKey('livePricesCache', {prices:{}, updated:''});
   state.liveData = cache.prices || {};
   state.liveUpdated = cache.updated || '';
