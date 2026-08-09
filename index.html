@@ -1,0 +1,554 @@
+<style>
+.ledger-app{background:transparent;font-family:'Inter',-apple-system,sans-serif;}
+.ledger-app *{box-sizing:border-box;}
+.ledger-desk{background:#14171d;border-radius:16px;padding:18px;}
+.ledger-page{background:#E7DFC6;border-radius:10px;padding:20px 18px;position:relative;box-shadow:0 1px 0 rgba(0,0,0,0.15) inset;}
+.ledger-page::before{content:'';position:absolute;left:0;top:0;bottom:0;width:6px;background:repeating-linear-gradient(180deg,#B8892E 0 10px,transparent 10px 20px);border-radius:10px 0 0 10px;opacity:.55;}
+.ledger-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.ledger-title{font-family:'Fraunces',serif;font-weight:700;font-size:22px;color:#1B2A44;margin:0;}
+.ledger-sub{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6b6650;margin:2px 0 0;}
+.reset-btn{font-family:'Inter',sans-serif;font-size:11px;background:none;border:1px solid #9c8f66;color:#5c5540;border-radius:6px;padding:5px 9px;cursor:pointer;}
+.reset-btn:hover{background:#ddd2ac;}
+.tab-rail{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.tab-btn{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.02em;background:#dcd1a8;border:1px solid #b8ab7c;color:#4a4632;border-radius:999px;padding:7px 13px;cursor:pointer;}
+.tab-btn.active{background:#1B2A44;color:#E7DFC6;border-color:#1B2A44;}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+.card{background:#F4EFDD;border:1px solid #c9bf9f;border-radius:8px;padding:14px;margin-bottom:12px;position:relative;}
+.card-rule{border-bottom:1px dashed #b6ab86;margin:8px 0;}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.row>div{flex:1;min-width:120px;}
+.lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;color:#7a7255;display:block;margin-bottom:3px;letter-spacing:.03em;}
+.field{width:100%;font-family:'IBM Plex Mono',monospace;font-size:13px;background:#fbf8ef;border:1px solid #c2b78e;border-radius:5px;padding:6px 7px;color:#1B2A44;}
+select.field{cursor:pointer;}
+textarea.field{resize:vertical;min-height:50px;}
+.total-line{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#41506b;margin-top:8px;}
+.total-num{font-size:16px;font-weight:600;color:#1B2A44;}
+.stamp{display:inline-block;font-family:'Fraunces',serif;font-weight:700;font-size:12px;letter-spacing:.04em;padding:5px 12px;border-radius:5px;border:2px solid;transform:rotate(-3deg);}
+.stamp-green{color:#2E6F52;border-color:#2E6F52;background:rgba(46,111,82,.08);}
+.stamp-gold{color:#8f6a1f;border-color:#B8892E;background:rgba(184,137,46,.1);}
+.stamp-red{color:#9C3B2E;border-color:#9C3B2E;background:rgba(156,59,46,.08);}
+.ticker-badge{font-family:'Fraunces',serif;font-weight:700;font-size:16px;color:#1B2A44;}
+.tag{font-family:'IBM Plex Mono',monospace;font-size:10px;background:#dcd1a8;border-radius:4px;padding:2px 6px;color:#5c5540;margin-left:6px;}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;}
+.pillar-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:8px;margin-top:8px;}
+.pillar-box{background:#fbf8ef;border:1px solid #c2b78e;border-radius:5px;padding:5px 6px;}
+.pillar-box .lbl{margin-bottom:2px;}
+.pillar-box input{width:100%;border:none;background:none;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#1B2A44;padding:0;}
+.bar-track{height:6px;background:#d6cba0;border-radius:3px;overflow:hidden;margin-top:6px;}
+.bar-fill{height:100%;background:#1B2A44;}
+.btn{font-family:'Inter',sans-serif;font-size:12px;background:#1B2A44;color:#E7DFC6;border:none;border-radius:6px;padding:7px 13px;cursor:pointer;}
+.btn:hover{background:#26385c;}
+.btn-ghost{background:none;border:1px solid #9C3B2E;color:#9C3B2E;}
+.btn-ghost:hover{background:rgba(156,59,46,.08);}
+.btn-add{background:none;border:1px dashed #6b6650;color:#5c5540;width:100%;padding:9px;}
+.warn-badge{font-family:'IBM Plex Mono',monospace;font-size:10px;background:#9C3B2E;color:#fbeee9;padding:2px 7px;border-radius:4px;}
+.summary-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px;}
+.summary-box{background:#1B2A44;color:#E7DFC6;border-radius:8px;padding:10px 12px;}
+.summary-box .lbl{color:#9fb0cc;}
+.summary-box .val{font-family:'Fraunces',serif;font-size:18px;font-weight:700;}
+.journal-entry{border-left:3px solid #B8892E;padding-left:10px;margin-bottom:10px;}
+.journal-meta{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#7a7255;}
+.del-x{position:absolute;top:10px;right:10px;background:none;border:none;color:#9C3B2E;cursor:pointer;font-size:14px;line-height:1;}
+.empty-note{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8a8266;text-align:center;padding:14px;}
+@media(max-width:480px){.ledger-title{font-size:18px;}.pillar-grid{grid-template-columns:repeat(2,1fr);}}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<div class="ledger-app">
+<div class="ledger-desk">
+<div class="ledger-page">
+
+<div class="ledger-header">
+  <div>
+    <p class="ledger-title">สมุดพกนักลงทุน</p>
+    <p class="ledger-sub">World-Class Investing System — Personal Ledger</p>
+    <p class="ledger-sub" id="storage-mode-note" style="margin-top:2px;"></p>
+  </div>
+  <button class="reset-btn" onclick="window.__ledgerReset()">ล้างข้อมูลทั้งหมด</button>
+</div>
+
+<div class="tab-rail" id="tab-rail"></div>
+<div id="tab-content"></div>
+
+</div>
+</div>
+</div>
+
+<script>
+(function(){
+
+var TABS = [
+  {id:'regime', label:'Market Regime'},
+  {id:'watchlist', label:'8 Pillars Watchlist'},
+  {id:'entryexit', label:'Entry / Exit'},
+  {id:'portfolio', label:'Portfolio'},
+  {id:'journal', label:'Journal'}
+];
+
+var PILLAR_MAX = {biz:25, fin:20, growth:15, val:15, tech:10, mgmt:10, macro:5};
+var PILLAR_LABELS = {biz:'Business', fin:'Financial', growth:'Growth', val:'Valuation', tech:'Technical', mgmt:'Mgmt', macro:'Macro'};
+
+var SEED_WATCHLIST = [
+  {id:'nvda', ticker:'NVDA', market:'US', type:'Growth', pillars:{biz:23,fin:19,growth:14,val:12,tech:8,mgmt:7,macro:5}},
+  {id:'msft', ticker:'MSFT', market:'US', type:'Core', pillars:{biz:22,fin:17,growth:12,val:10,tech:6,mgmt:9,macro:5}},
+  {id:'v', ticker:'V', market:'US', type:'Core', pillars:{biz:23,fin:17,growth:10,val:10,tech:6,mgmt:9,macro:5}},
+  {id:'avgo', ticker:'AVGO', market:'US', type:'Growth', pillars:{biz:22,fin:16,growth:14,val:9,tech:7,mgmt:8,macro:5}},
+  {id:'advanc', ticker:'ADVANC', market:'TH', type:'Core', pillars:{biz:21,fin:15,growth:8,val:12,tech:7,mgmt:8,macro:4}},
+  {id:'delta', ticker:'DELTA', market:'TH', type:'Growth', pillars:{biz:22,fin:16,growth:14,val:2,tech:6,mgmt:7,macro:5}},
+  {id:'pltr', ticker:'PLTR', market:'US', type:'Growth', pillars:{biz:20,fin:15,growth:15,val:3,tech:5,mgmt:5,macro:5}},
+  {id:'kce', ticker:'KCE', market:'TH', type:'Value', pillars:{biz:16,fin:12,growth:9,val:6,tech:5,mgmt:6,macro:3}}
+];
+
+var SEED_PORTFOLIO = [
+  {id:'p1', ticker:'MSFT', holding:35.53, cost:30.45, shares:0},
+  {id:'p2', ticker:'V', holding:33.16, cost:30.21, shares:0},
+  {id:'p3', ticker:'AVGO', holding:17.14, cost:14.96, shares:0}
+];
+
+var SEED_REGIME = {economic:21, technical:24, monetary:15, sentiment:12};
+
+var SEED_JOURNAL = [
+  {id:'j1', date:new Date().toISOString().slice(0,10), ticker:'PORTFOLIO REVIEW', action:'Hold', price:'-',
+   thesis:'ตรวจพอร์ต MSFT/V/AVGO — Thesis ยังดี Score 80-81/100 ทั้งหมด แต่ Concentration เกิน 15% ต่อตัว',
+   risk:'MSFT และ V ให้ Risk/Reward ต่ำกว่า 1:2 ที่ราคาปัจจุบัน ควรรอ Pullback ก่อนเพิ่ม Position'}
+];
+
+var state = {regime:null, watchlist:null, portfolio:null, journal:null, liveFeedUrl:'', liveData:{}, liveUpdated:'', entryExit:null};
+
+function getEntryExitFor(id){
+  if(!state.entryExit) state.entryExit = {};
+  if(!state.entryExit[id]) state.entryExit[id] = {entry:{val:0,tech:0,cat:0,mkt:0}, exit:{val:0,thesis:0,opp:0}, rr:{entry:0,target:0,stop:0}};
+  return state.entryExit[id];
+}
+var activeTab = 'regime';
+var activeEntryStockId = null;
+
+function fmt(n, d){ d = d===undefined?2:d; var v = Number(n); if(isNaN(v)) v=0; return v.toLocaleString('en-US',{minimumFractionDigits:d, maximumFractionDigits:d}); }
+function clamp(v, lo, hi){ v = Number(v); if(isNaN(v)) v=0; return Math.max(lo, Math.min(hi, v)); }
+
+var HAS_CLAUDE_STORAGE = !!(window.storage && typeof window.storage.get === 'function');
+
+async function loadKey(key, seed){
+  if(!HAS_CLAUDE_STORAGE){
+    try{
+      var raw = localStorage.getItem('ledger_'+key);
+      if(raw) return JSON.parse(raw);
+      return JSON.parse(JSON.stringify(seed));
+    }catch(e){
+      return JSON.parse(JSON.stringify(seed));
+    }
+  }
+  try{
+    var res = await window.storage.get(key, false);
+    if(res && res.value) return JSON.parse(res.value);
+    return JSON.parse(JSON.stringify(seed));
+  }catch(e){
+    return JSON.parse(JSON.stringify(seed));
+  }
+}
+async function saveKey(key, val){
+  if(!HAS_CLAUDE_STORAGE){
+    try{ localStorage.setItem('ledger_'+key, JSON.stringify(val)); }
+    catch(e){ console.error('local save failed', key, e); }
+    return;
+  }
+  try{ await window.storage.set(key, JSON.stringify(val), false); }
+  catch(e){ console.error('save failed', key, e); }
+}
+
+function pillarTotal(p){ var s=0; for(var k in PILLAR_MAX){ s += Number(p[k])||0; } return s; }
+function screenerVerdict(total){
+  if(total>=85) return {label:'STRONG BUY', cls:'stamp-green'};
+  if(total>=75) return {label:'BUY', cls:'stamp-green'};
+  if(total>=65) return {label:'WATCHLIST', cls:'stamp-gold'};
+  return {label:'PASS', cls:'stamp-red'};
+}
+function regimeVerdict(total){
+  if(total>=80) return {label:'STRONG BULL', cls:'stamp-green', note:'Full Invested 95% — Growth Focus'};
+  if(total>=65) return {label:'BULL', cls:'stamp-green', note:'Invested 85% — Quality Growth'};
+  if(total>=50) return {label:'CAUTIOUS BULL', cls:'stamp-gold', note:'Invested 70% — Add Defensive'};
+  if(total>=35) return {label:'NEUTRAL / SIDEWAYS', cls:'stamp-gold', note:'Invested 60% — Balanced'};
+  if(total>=20) return {label:'BEAR', cls:'stamp-red', note:'Invested 40% — Defensive Heavy'};
+  return {label:'STRONG BEAR', cls:'stamp-red', note:'Cash 50%+ — Survival Mode'};
+}
+function entryVerdict(total){
+  if(total>=35) return {label:'PERFECT ENTRY', cls:'stamp-green'};
+  if(total>=25) return {label:'GOOD ENTRY', cls:'stamp-green'};
+  if(total>=15) return {label:'ACCEPTABLE', cls:'stamp-gold'};
+  return {label:'รอก่อน', cls:'stamp-red'};
+}
+function exitVerdict(total){
+  if(total>=41) return {label:'EXIT — ขายทั้งหมด', cls:'stamp-red'};
+  if(total>=26) return {label:'REDUCE 75%', cls:'stamp-red'};
+  if(total>=11) return {label:'TRIM 25-50%', cls:'stamp-gold'};
+  return {label:'HOLD', cls:'stamp-green'};
+}
+
+function switchTab(id){
+  activeTab = id;
+  renderTabRail();
+  renderTabContent();
+}
+window.__ledgerSwitchTab = switchTab;
+
+function renderTabRail(){
+  var el = document.getElementById('tab-rail');
+  el.innerHTML = TABS.map(function(t){
+    return '<button class="tab-btn'+(t.id===activeTab?' active':'')+'" onclick="window.__ledgerSwitchTab(\''+t.id+'\')">'+t.label+'</button>';
+  }).join('');
+}
+
+function renderTabContent(){
+  var el = document.getElementById('tab-content');
+  if(activeTab==='regime') el.innerHTML = viewRegime();
+  else if(activeTab==='watchlist') el.innerHTML = viewWatchlist();
+  else if(activeTab==='entryexit') el.innerHTML = viewEntryExit();
+  else if(activeTab==='portfolio') el.innerHTML = viewPortfolio();
+  else if(activeTab==='journal') el.innerHTML = viewJournal();
+}
+
+function viewRegime(){
+  var r = state.regime;
+  var total = clamp(r.economic,0,30) + clamp(r.technical,0,30) + clamp(r.monetary,0,20) + clamp(r.sentiment,0,20);
+  var v = regimeVerdict(total);
+  return ''+
+  '<div class="card">'+
+    '<div class="card-head"><div><span class="lbl">Regime Score</span><span class="total-num">'+total+' / 100</span></div>'+
+    '<span class="stamp '+v.cls+'">'+v.label+'</span></div>'+
+    '<div class="card-rule"></div>'+
+    '<p class="ledger-sub" style="margin-bottom:10px;">'+v.note+'</p>'+
+    '<div class="row">'+
+      regimeField('economic','Economic Indicators',30,r.economic)+
+      regimeField('technical','Market Technical',30,r.technical)+
+    '</div>'+
+    '<div class="row" style="margin-top:8px;">'+
+      regimeField('monetary','Monetary Conditions',20,r.monetary)+
+      regimeField('sentiment','Sentiment',20,r.sentiment)+
+    '</div>'+
+  '</div>'+
+  '<p class="empty-note">ปรับตัวเลขให้ตรงกับการประเมินของคุณในแต่ละสัปดาห์ ระบบจะคำนวณ Regime และคำแนะนำสัดส่วนลงทุนให้อัตโนมัติ</p>';
+}
+function regimeField(key,label,max,val){
+  return '<div><span class="lbl">'+label+' (max '+max+')</span>'+
+    '<input class="field" type="number" min="0" max="'+max+'" value="'+val+'" onchange="window.__ledgerRegimeUpdate(\''+key+'\',this.value,'+max+')"></div>';
+}
+window.__ledgerRegimeUpdate = function(key,val,max){
+  state.regime[key] = clamp(val,0,max);
+  saveKey('regime', state.regime);
+  renderTabContent();
+};
+
+function liveBadge(ticker){
+  var d = state.liveData[ticker];
+  if(!d) return '';
+  var col = (Number(d.change_pct)>=0) ? '#2E6F52' : '#9C3B2E';
+  var sym = d.currency==='THB' ? '฿' : '$';
+  return '<span class="tag" style="color:'+col+';">'+sym+fmt(d.price,2)+' ('+(d.change_pct>=0?'+':'')+fmt(d.change_pct,2)+'%)</span>';
+}
+
+function viewWatchlist(){
+  var html = state.watchlist.map(function(s){
+    var total = pillarTotal(s.pillars);
+    var v = screenerVerdict(total);
+    var pillarsHtml = Object.keys(PILLAR_MAX).map(function(k){
+      return '<div class="pillar-box"><span class="lbl">'+PILLAR_LABELS[k]+' /'+PILLAR_MAX[k]+'</span>'+
+        '<input type="number" min="0" max="'+PILLAR_MAX[k]+'" value="'+s.pillars[k]+'" onchange="window.__ledgerPillarUpdate(\''+s.id+'\',\''+k+'\',this.value)"></div>';
+    }).join('');
+    return '<div class="card">'+
+      '<button class="del-x" onclick="window.__ledgerDeleteStock(\''+s.id+'\')" aria-label="ลบ">✕</button>'+
+      '<div class="card-head"><div><span class="ticker-badge">'+escapeHtml(s.ticker)+'</span><span class="tag">'+escapeHtml(s.market)+'</span><span class="tag">'+escapeHtml(s.type)+'</span>'+liveBadge(s.ticker)+'</div>'+
+      '<span class="stamp '+v.cls+'">'+v.label+'</span></div>'+
+      '<div class="total-line">Score: <span class="total-num">'+total+'</span> / 100</div>'+
+      '<div class="bar-track"><div class="bar-fill" style="width:'+total+'%;"></div></div>'+
+      '<div class="pillar-grid">'+pillarsHtml+'</div>'+
+    '</div>';
+  }).join('');
+  return html + '<button class="btn-add" onclick="window.__ledgerAddStock()">+ เพิ่มหุ้นใหม่ในรายการ</button>';
+}
+window.__ledgerPillarUpdate = function(id,key,val){
+  var s = state.watchlist.find(function(x){return x.id===id;});
+  if(!s) return;
+  s.pillars[key] = clamp(val,0,PILLAR_MAX[key]);
+  saveKey('watchlist', state.watchlist);
+  renderTabContent();
+};
+window.__ledgerDeleteStock = function(id){
+  state.watchlist = state.watchlist.filter(function(x){return x.id!==id;});
+  saveKey('watchlist', state.watchlist);
+  renderTabContent();
+};
+window.__ledgerAddStock = function(){
+  var ticker = prompt('ชื่อหุ้น (Ticker):');
+  if(!ticker) return;
+  var id = 'stk_'+Date.now();
+  state.watchlist.push({id:id, ticker:ticker.toUpperCase(), market:'US', type:'Growth', pillars:{biz:0,fin:0,growth:0,val:0,tech:0,mgmt:0,macro:0}});
+  saveKey('watchlist', state.watchlist);
+  renderTabContent();
+};
+
+function viewEntryExit(){
+  var stillExists = state.watchlist.some(function(s){ return s.id===activeEntryStockId; });
+  if((!activeEntryStockId || !stillExists) && state.watchlist.length) activeEntryStockId = state.watchlist[0].id;
+  if(!state.watchlist.length) activeEntryStockId = null;
+  if(!activeEntryStockId){
+    return '<p class="empty-note">ยังไม่มีหุ้นใน Watchlist — เพิ่มหุ้นในแท็บ 8 Pillars Watchlist ก่อน</p>';
+  }
+  var options = state.watchlist.map(function(s){
+    return '<option value="'+s.id+'"'+(s.id===activeEntryStockId?' selected':'')+'>'+escapeHtml(s.ticker)+'</option>';
+  }).join('');
+  var rec = getEntryExitFor(activeEntryStockId);
+  var etotal = clamp(rec.entry.val,0,15)+clamp(rec.entry.tech,0,10)+clamp(rec.entry.cat,0,10)+clamp(rec.entry.mkt,0,5);
+  var ev = entryVerdict(etotal);
+  var xtotal = clamp(rec.exit.val,0,15)+clamp(rec.exit.thesis,0,25)+clamp(rec.exit.opp,0,10);
+  var xv = exitVerdict(xtotal);
+  var risk = rec.rr.entry - rec.rr.stop;
+  var reward = rec.rr.target - rec.rr.entry;
+  var rr = (risk>0 && reward>0) ? (reward/risk) : 0;
+  return ''+
+  '<div class="card"><span class="lbl">เลือกหุ้นจาก Watchlist</span>'+
+    '<select class="field" onchange="window.__ledgerSelectStock(this.value)">'+options+'</select></div>'+
+  '<div class="card"><div class="card-head"><span class="lbl">Entry Score</span><span class="stamp '+ev.cls+'">'+ev.label+'</span></div>'+
+    '<div class="total-num">'+etotal+' / 40</div><div class="card-rule"></div>'+
+    '<div class="row">'+
+      entryField('val','Valuation Entry',15,rec.entry.val)+
+      entryField('tech','Technical Setup',10,rec.entry.tech)+
+    '</div><div class="row" style="margin-top:8px;">'+
+      entryField('cat','Catalyst',10,rec.entry.cat)+
+      entryField('mkt','Market Condition',5,rec.entry.mkt)+
+    '</div></div>'+
+  '<div class="card"><span class="lbl">คำนวณ Risk / Reward</span>'+
+    '<div class="row" style="margin-top:6px;">'+
+      rrField('entry','ราคาเข้าซื้อ',rec.rr.entry)+
+      rrField('target','เป้าหมาย',rec.rr.target)+
+      rrField('stop','Stop Loss',rec.rr.stop)+
+    '</div>'+
+    '<div class="total-line">Risk/Reward = <span class="total-num">'+(rr>0?fmt(rr,2):'—')+'</span> : 1 '+(rr>0&&rr<2?'<span class="warn-badge">ต่ำกว่าเกณฑ์ 1:2</span>':'')+'</div>'+
+  '</div>'+
+  '<div class="card"><div class="card-head"><span class="lbl">Exit Score</span><span class="stamp '+xv.cls+'">'+xv.label+'</span></div>'+
+    '<div class="total-num">'+xtotal+' / 50</div><div class="card-rule"></div>'+
+    '<div class="row">'+
+      exitField('val','Valuation แพงแค่ไหน',15,rec.exit.val)+
+      exitField('thesis','Thesis เปลี่ยนแค่ไหน',25,rec.exit.thesis)+
+    '</div><div class="row" style="margin-top:8px;">'+
+      exitField('opp','มีโอกาสดีกว่าไหม',10,rec.exit.opp)+
+    '</div></div>';
+}
+function entryField(key,label,max,val){
+  return '<div><span class="lbl">'+label+' (max '+max+')</span>'+
+    '<input class="field" type="number" min="0" max="'+max+'" value="'+val+'" onchange="window.__ledgerEntryUpdate(\''+key+'\',this.value,'+max+')"></div>';
+}
+function exitField(key,label,max,val){
+  return '<div><span class="lbl">'+label+' (max '+max+')</span>'+
+    '<input class="field" type="number" min="0" max="'+max+'" value="'+val+'" onchange="window.__ledgerExitUpdate(\''+key+'\',this.value,'+max+')"></div>';
+}
+function rrField(key,label,val){
+  return '<div><span class="lbl">'+label+'</span>'+
+    '<input class="field" type="number" min="0" step="0.01" value="'+val+'" onchange="window.__ledgerRrUpdate(\''+key+'\',this.value)"></div>';
+}
+window.__ledgerSelectStock = function(id){ activeEntryStockId = id; renderTabContent(); };
+window.__ledgerEntryUpdate = function(k,v,max){
+  var rec = getEntryExitFor(activeEntryStockId);
+  rec.entry[k] = clamp(v,0,max);
+  saveKey('entryExit', state.entryExit);
+  renderTabContent();
+};
+window.__ledgerExitUpdate = function(k,v,max){
+  var rec = getEntryExitFor(activeEntryStockId);
+  rec.exit[k] = clamp(v,0,max);
+  saveKey('entryExit', state.entryExit);
+  renderTabContent();
+};
+window.__ledgerRrUpdate = function(k,v){
+  var rec = getEntryExitFor(activeEntryStockId);
+  rec.rr[k] = Math.max(0, Number(v)||0);
+  saveKey('entryExit', state.entryExit);
+  renderTabContent();
+};
+
+function viewPortfolio(){
+  var totalHold = 0, totalCost = 0;
+  state.portfolio.forEach(function(p){ totalHold += Number(p.holding)||0; totalCost += Number(p.cost)||0; });
+  var totalPl = totalCost>0 ? ((totalHold-totalCost)/totalCost*100) : 0;
+  var settingsCard = '<div class="card">'+
+    '<span class="lbl">Live Feed URL (JSON จาก GitHub Actions)</span>'+
+    '<div class="row" style="margin-top:6px;">'+
+      '<input class="field" type="text" id="live-feed-url" placeholder="https://raw.githubusercontent.com/USERNAME/REPO/main/prices.json" value="'+(state.liveFeedUrl||'')+'" style="flex:3;min-width:180px;">'+
+      '<button class="btn" style="flex:1;min-width:100px;" onclick="window.__ledgerSyncLive()">Sync ราคาล่าสุด</button>'+
+    '</div>'+
+    '<p class="ledger-sub" id="live-sync-status" style="margin-top:6px;">'+(state.liveUpdated?('อัปเดตล่าสุด: '+state.liveUpdated):'ยังไม่เคย Sync — ใส่จำนวนหุ้น (Shares) ในแต่ละ Holding ก่อน แล้วกด Sync')+'</p>'+
+  '</div>';
+  var summary = '<div class="summary-strip">'+
+    '<div class="summary-box"><span class="lbl">มูลค่ารวม</span><div class="val">$'+fmt(totalHold)+'</div></div>'+
+    '<div class="summary-box"><span class="lbl">ต้นทุนรวม</span><div class="val">$'+fmt(totalCost)+'</div></div>'+
+    '<div class="summary-box"><span class="lbl">Unrealized P/L</span><div class="val">'+(totalPl>=0?'+':'')+fmt(totalPl,1)+'%</div></div>'+
+  '</div>';
+  var cards = state.portfolio.map(function(p){
+    var pl = (Number(p.cost)>0) ? ((p.holding-p.cost)/p.cost*100) : 0;
+    var weight = totalHold>0 ? (p.holding/totalHold*100) : 0;
+    var over = weight > 15;
+    var live = state.liveData[p.ticker];
+    return '<div class="card">'+
+      '<button class="del-x" onclick="window.__ledgerDeletePf(\''+p.id+'\')" aria-label="ลบ">✕</button>'+
+      '<div class="card-head"><span class="ticker-badge">'+escapeHtml(p.ticker)+'</span>'+
+        '<span>'+(over?'<span class="warn-badge">Weight เกิน 15%</span> ':'')+'<span class="tag">'+fmt(weight,1)+'%</span></span></div>'+
+      (live ? '<p class="ledger-sub" style="margin:4px 0 0;">ราคาสด: '+(live.currency==='THB'?'฿':'$')+fmt(live.price,2)+' ('+(live.change_pct>=0?'+':'')+fmt(live.change_pct,2)+'%)</p>' : '')+
+      '<div class="row" style="margin-top:8px;">'+
+        '<div><span class="lbl">จำนวนหุ้น (Shares)</span><input class="field" type="number" min="0" step="0.0001" value="'+(p.shares||0)+'" onchange="window.__ledgerPfUpdate(\''+p.id+'\',\'shares\',this.value)"></div>'+
+        '<div><span class="lbl">มูลค่าปัจจุบัน (USD)</span><input class="field" type="number" step="0.01" value="'+p.holding+'" onchange="window.__ledgerPfUpdate(\''+p.id+'\',\'holding\',this.value)"></div>'+
+        '<div><span class="lbl">ต้นทุน (USD)</span><input class="field" type="number" step="0.01" value="'+p.cost+'" onchange="window.__ledgerPfUpdate(\''+p.id+'\',\'cost\',this.value)"></div>'+
+      '</div>'+
+      '<div class="total-line">P/L: <span class="total-num" style="color:'+(pl>=0?'#2E6F52':'#9C3B2E')+';">'+(pl>=0?'+':'')+fmt(pl,2)+'%</span></div>'+
+    '</div>';
+  }).join('');
+  return settingsCard + summary + cards + '<button class="btn-add" onclick="window.__ledgerAddPf()">+ เพิ่ม Holding ใหม่</button>';
+}
+async function doSync(url){
+  if(!url) return {ok:false, msg:'no url'};
+  try{
+    var res = await fetch(url, {cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    var json = await res.json();
+    if(!json || !json.prices) throw new Error('รูปแบบข้อมูลไม่ถูกต้อง');
+    state.liveData = json.prices;
+    state.liveUpdated = json.updated || new Date().toISOString();
+    state.liveFeedUrl = url;
+    saveKey('liveFeedUrl', url);
+    saveKey('livePricesCache', {prices:state.liveData, updated:state.liveUpdated});
+    state.portfolio.forEach(function(p){
+      var live = state.liveData[p.ticker];
+      if(live && Number(p.shares) > 0){
+        p.holding = Math.round(Number(p.shares) * Number(live.price) * 100) / 100;
+      }
+    });
+    saveKey('portfolio', state.portfolio);
+    return {ok:true};
+  }catch(e){
+    return {ok:false, msg:e.message};
+  }
+}
+window.__ledgerSyncLive = async function(){
+  var urlInput = document.getElementById('live-feed-url');
+  var url = urlInput ? urlInput.value.trim() : state.liveFeedUrl;
+  if(!url){ alert('กรุณาใส่ Live Feed URL ก่อน'); return; }
+  var statusEl = document.getElementById('live-sync-status');
+  if(statusEl) statusEl.textContent = 'กำลังซิงค์...';
+  var r = await doSync(url);
+  if(r.ok){
+    renderTabContent();
+  }else{
+    var el = document.getElementById('live-sync-status');
+    if(el) el.textContent = 'ซิงค์ไม่สำเร็จ: '+r.msg+' (เช็คว่า URL เป็น Raw JSON ที่เข้าถึงได้แบบ Public)';
+    else alert('ซิงค์ไม่สำเร็จ: '+r.msg);
+  }
+};
+window.__ledgerPfUpdate = function(id,field,val){
+  var p = state.portfolio.find(function(x){return x.id===id;});
+  if(!p) return;
+  var num = Number(val)||0;
+  p[field] = (field==='shares') ? Math.max(0, num) : num;
+  saveKey('portfolio', state.portfolio);
+  renderTabContent();
+};
+window.__ledgerDeletePf = function(id){
+  state.portfolio = state.portfolio.filter(function(x){return x.id!==id;});
+  saveKey('portfolio', state.portfolio);
+  renderTabContent();
+};
+window.__ledgerAddPf = function(){
+  var ticker = prompt('ชื่อหุ้น (Ticker):');
+  if(!ticker) return;
+  state.portfolio.push({id:'pf_'+Date.now(), ticker:ticker.toUpperCase(), holding:0, cost:0, shares:0});
+  saveKey('portfolio', state.portfolio);
+  renderTabContent();
+};
+
+function viewJournal(){
+  var form = '<div class="card">'+
+    '<div class="row">'+
+      '<div><span class="lbl">วันที่</span><input class="field" type="date" id="jf-date" value="'+new Date().toISOString().slice(0,10)+'"></div>'+
+      '<div><span class="lbl">หุ้น</span><input class="field" type="text" id="jf-ticker" placeholder="TICKER"></div>'+
+    '</div><div class="row" style="margin-top:8px;">'+
+      '<div><span class="lbl">Action</span><select class="field" id="jf-action"><option>Buy</option><option>Sell</option><option>Hold</option><option>Watch</option></select></div>'+
+      '<div><span class="lbl">ราคา</span><input class="field" type="text" id="jf-price" placeholder="0.00"></div>'+
+    '</div>'+
+    '<div style="margin-top:8px;"><span class="lbl">Thesis</span><textarea class="field" id="jf-thesis" placeholder="เหตุผลที่ตัดสินใจ..."></textarea></div>'+
+    '<div style="margin-top:8px;"><span class="lbl">Risk</span><textarea class="field" id="jf-risk" placeholder="ความเสี่ยง / เงื่อนไข Exit..."></textarea></div>'+
+    '<div style="margin-top:10px;"><button class="btn" onclick="window.__ledgerSaveJournal()">บันทึกลงสมุด</button></div>'+
+  '</div>';
+  var entries = state.journal.slice().reverse().map(function(e){
+    return '<div class="card"><button class="del-x" onclick="window.__ledgerDeleteJournal(\''+e.id+'\')" aria-label="ลบ">✕</button>'+
+      '<div class="journal-entry"><div class="journal-meta">'+escapeHtml(e.date)+' · '+escapeHtml(e.ticker)+' · '+escapeHtml(e.action)+' · '+escapeHtml(e.price)+'</div>'+
+      '<p style="margin:6px 0 4px;font-size:13px;color:#1B2A44;">'+escapeHtml(e.thesis||'')+'</p>'+
+      '<p style="margin:0;font-size:12px;color:#7a7255;">Risk: '+escapeHtml(e.risk||'')+'</p></div></div>';
+  }).join('');
+  if(!state.journal.length) entries = '<p class="empty-note">ยังไม่มีบันทึก — เริ่มบันทึกทุกครั้งที่ตัดสินใจซื้อขาย</p>';
+  return form + entries;
+}
+function escapeHtml(s){ var d=document.createElement('div'); d.innerText=s; return d.innerHTML; }
+window.__ledgerSaveJournal = function(){
+  var entry = {
+    id:'j_'+Date.now(),
+    date: document.getElementById('jf-date').value,
+    ticker: (document.getElementById('jf-ticker').value||'-').toUpperCase(),
+    action: document.getElementById('jf-action').value,
+    price: document.getElementById('jf-price').value||'-',
+    thesis: document.getElementById('jf-thesis').value,
+    risk: document.getElementById('jf-risk').value
+  };
+  state.journal.push(entry);
+  saveKey('journal', state.journal);
+  renderTabContent();
+};
+window.__ledgerDeleteJournal = function(id){
+  state.journal = state.journal.filter(function(x){return x.id!==id;});
+  saveKey('journal', state.journal);
+  renderTabContent();
+};
+
+window.__ledgerReset = function(){
+  if(!confirm('ล้างข้อมูลทั้งหมดและเริ่มใหม่จากค่าเริ่มต้น?')) return;
+  state.regime = JSON.parse(JSON.stringify(SEED_REGIME));
+  state.watchlist = JSON.parse(JSON.stringify(SEED_WATCHLIST));
+  state.portfolio = JSON.parse(JSON.stringify(SEED_PORTFOLIO));
+  state.journal = JSON.parse(JSON.stringify(SEED_JOURNAL));
+  state.liveFeedUrl = '';
+  state.liveData = {};
+  state.liveUpdated = '';
+  state.entryExit = {};
+  saveKey('regime', state.regime);
+  saveKey('watchlist', state.watchlist);
+  saveKey('portfolio', state.portfolio);
+  saveKey('journal', state.journal);
+  saveKey('liveFeedUrl', '');
+  saveKey('livePricesCache', {prices:{}, updated:''});
+  saveKey('entryExit', {});
+  renderTabRail();
+  renderTabContent();
+};
+
+async function init(){
+  state.regime = await loadKey('regime', SEED_REGIME);
+  state.watchlist = await loadKey('watchlist', SEED_WATCHLIST);
+  state.portfolio = await loadKey('portfolio', SEED_PORTFOLIO);
+  state.journal = await loadKey('journal', SEED_JOURNAL);
+  state.liveFeedUrl = await loadKey('liveFeedUrl', '');
+  state.entryExit = await loadKey('entryExit', {});
+  var cache = await loadKey('livePricesCache', {prices:{}, updated:''});
+  state.liveData = cache.prices || {};
+  state.liveUpdated = cache.updated || '';
+  renderTabRail();
+  renderTabContent();
+  var modeEl = document.getElementById('storage-mode-note');
+  if(modeEl){
+    modeEl.textContent = HAS_CLAUDE_STORAGE ? 'บันทึกในบัญชี Claude — เปิดจากอุปกรณ์ไหนก็เห็นข้อมูลเดิม' : 'บันทึกในเบราว์เซอร์นี้ (Local) — ข้อมูลจะอยู่เฉพาะไฟล์นี้บนเครื่องนี้เท่านั้น';
+  }
+  if(state.liveFeedUrl){
+    doSync(state.liveFeedUrl).then(function(){ renderTabContent(); });
+  }
+}
+init();
+
+})();
+</script>
