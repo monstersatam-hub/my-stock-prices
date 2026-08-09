@@ -2,10 +2,8 @@ name: Update Stock Prices
 
 on:
   schedule:
-    # 17:30 ICT (10:30 UTC) — หลังตลาดหุ้นไทยปิด (16:30)
-    - cron: "30 10 * * 1-5"
-    # 05:00 ICT (22:00 UTC) — หลังตลาดหุ้นสหรัฐปิด (16:00 ET)
-    - cron: "0 22 * * 1-5"
+    # ดึงราคาทุกชั่วโมง ตลอดวัน
+    - cron: "0 * * * *"
   workflow_dispatch: {}
 
 permissions:
@@ -29,6 +27,8 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: python check_alerts.py
 
       - run: |
