@@ -1,0 +1,10 @@
+{
+  "NVDA": {"entry_low": 210, "entry_high": 230, "stop_loss": 190, "target": 303},
+  "MSFT": {"entry_low": 460, "entry_high": 480, "stop_loss": 430, "target": 563},
+  "V": {"entry_low": 330, "entry_high": 350, "stop_loss": 310, "target": 405},
+  "AVGO": {"entry_low": 380, "entry_high": 400, "stop_loss": 340, "target": 470},
+  "ADVANC": {"entry_low": 340, "entry_high": 365, "stop_loss": 310, "target": 405},
+  "DELTA": {"entry_low": null, "entry_high": null, "stop_loss": null, "target": null},
+  "PLTR": {"entry_low": null, "entry_high": null, "stop_loss": null, "target": null},
+  "KCE": {"entry_low": null, "entry_high": null, "stop_loss": null, "target": null}
+}
