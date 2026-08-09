@@ -380,12 +380,8 @@ function viewPortfolio(){
   }).join('');
   return settingsCard + summary + cards + '<button class="btn-add" onclick="window.__ledgerAddPf()">+ เพิ่ม Holding ใหม่</button>';
 }
-window.__ledgerSyncLive = async function(){
-  var urlInput = document.getElementById('live-feed-url');
-  var url = urlInput ? urlInput.value.trim() : state.liveFeedUrl;
-  if(!url){ alert('กรุณาใส่ Live Feed URL ก่อน'); return; }
-  var statusEl = document.getElementById('live-sync-status');
-  if(statusEl) statusEl.textContent = 'กำลังซิงค์...';
+async function doSync(url){
+  if(!url) return {ok:false, msg:'no url'};
   try{
     var res = await fetch(url, {cache:'no-store'});
     if(!res.ok) throw new Error('HTTP '+res.status);
@@ -403,10 +399,24 @@ window.__ledgerSyncLive = async function(){
       }
     });
     saveKey('portfolio', state.portfolio);
-    renderTabContent();
+    return {ok:true};
   }catch(e){
-    if(statusEl) statusEl.textContent = 'ซิงค์ไม่สำเร็จ: '+e.message+' (เช็คว่า URL เป็น Raw JSON ที่เข้าถึงได้แบบ Public)';
-    else alert('ซิงค์ไม่สำเร็จ: '+e.message);
+    return {ok:false, msg:e.message};
+  }
+}
+window.__ledgerSyncLive = async function(){
+  var urlInput = document.getElementById('live-feed-url');
+  var url = urlInput ? urlInput.value.trim() : state.liveFeedUrl;
+  if(!url){ alert('กรุณาใส่ Live Feed URL ก่อน'); return; }
+  var statusEl = document.getElementById('live-sync-status');
+  if(statusEl) statusEl.textContent = 'กำลังซิงค์...';
+  var r = await doSync(url);
+  if(r.ok){
+    renderTabContent();
+  }else{
+    var el = document.getElementById('live-sync-status');
+    if(el) el.textContent = 'ซิงค์ไม่สำเร็จ: '+r.msg+' (เช็คว่า URL เป็น Raw JSON ที่เข้าถึงได้แบบ Public)';
+    else alert('ซิงค์ไม่สำเร็จ: '+r.msg);
   }
 };
 window.__ledgerPfUpdate = function(id,field,val){
@@ -505,6 +515,9 @@ async function init(){
   var modeEl = document.getElementById('storage-mode-note');
   if(modeEl){
     modeEl.textContent = HAS_CLAUDE_STORAGE ? 'บันทึกในบัญชี Claude — เปิดจากอุปกรณ์ไหนก็เห็นข้อมูลเดิม' : 'บันทึกในเบราว์เซอร์นี้ (Local) — ข้อมูลจะอยู่เฉพาะไฟล์นี้บนเครื่องนี้เท่านั้น';
+  }
+  if(state.liveFeedUrl){
+    doSync(state.liveFeedUrl).then(function(){ renderTabContent(); });
   }
 }
 init();
