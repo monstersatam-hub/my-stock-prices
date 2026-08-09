@@ -10,6 +10,8 @@ STATE_FILE = "alert_state.json"
 
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
 
 def send_telegram(text):
@@ -33,8 +35,40 @@ def load_json(path, default):
         return default
 
 
+def load_alerts_config():
+    """
+    ลำดับความสำคัญ: อ่านจาก Supabase ก่อนถ้าตั้งค่า SUPABASE_URL/SUPABASE_KEY ไว้
+    ถ้าไม่ได้ตั้งค่า หรือดึงจาก Supabase ไม่สำเร็จ จะ fallback มาใช้ alerts_config.json ในเครื่องแทน
+    """
+    if SUPABASE_URL and SUPABASE_KEY:
+        try:
+            url = f"{SUPABASE_URL}/rest/v1/alerts?select=*"
+            req = urllib.request.Request(
+                url,
+                headers={
+                    "apikey": SUPABASE_KEY,
+                    "Authorization": f"Bearer {SUPABASE_KEY}",
+                },
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                rows = json.loads(resp.read().decode("utf-8"))
+            config = {}
+            for row in rows:
+                config[row["ticker"]] = {
+                    "entry_low": row.get("entry_low"),
+                    "entry_high": row.get("entry_high"),
+                    "stop_loss": row.get("stop_loss"),
+                    "target": row.get("target"),
+                }
+            print(f"loaded {len(config)} tickers from Supabase")
+            return config
+        except Exception as e:
+            print(f"warn: supabase fetch failed, falling back to local config: {e}", file=sys.stderr)
+    return load_json(CONFIG_FILE, {})
+
+
 def main():
-    config = load_json(CONFIG_FILE, {})
+    config = load_alerts_config()
     prices = load_json(PRICES_FILE, {}).get("prices", {})
     state = load_json(STATE_FILE, {})
     changed = False
