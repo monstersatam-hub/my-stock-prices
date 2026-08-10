@@ -1,44 +1,44 @@
 {
-  "updated": "2026-08-10T14:42:11.319253+00:00",
+  "updated": "2026-08-10T18:00:55.512549+00:00",
   "prices": {
     "NVDA": {
-      "price": 220.33,
-      "change_pct": -1.62,
+      "price": 218.43,
+      "change_pct": -2.47,
       "currency": "USD"
     },
     "MSFT": {
-      "price": 511.54,
-      "change_pct": 2.31,
+      "price": 505.41,
+      "change_pct": 1.08,
       "currency": "USD"
     },
     "V": {
-      "price": 361.29,
-      "change_pct": -0.34,
+      "price": 360.04,
+      "change_pct": -0.68,
       "currency": "USD"
     },
     "AVGO": {
-      "price": 430.22,
-      "change_pct": 0.58,
+      "price": 423.57,
+      "change_pct": -0.98,
       "currency": "USD"
     },
     "PLTR": {
-      "price": 179.08,
-      "change_pct": 4.11,
+      "price": 176.66,
+      "change_pct": 2.71,
       "currency": "USD"
     },
     "ADVANC": {
-      "price": 371.0,
-      "change_pct": -0.8,
+      "price": NaN,
+      "change_pct": NaN,
       "currency": "THB"
     },
     "DELTA": {
-      "price": 279.0,
-      "change_pct": 6.49,
+      "price": NaN,
+      "change_pct": NaN,
       "currency": "THB"
     },
     "KCE": {
-      "price": 43.75,
-      "change_pct": 1.16,
+      "price": NaN,
+      "change_pct": NaN,
       "currency": "THB"
     }
   }
