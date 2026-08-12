@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-12T20:04:47.794451+00:00",
+  "updated": "2026-08-12T23:22:00.628953+00:00",
   "prices": {
     "NVDA": {
       "price": 224.09,
@@ -12,8 +12,8 @@
       "currency": "USD"
     },
     "V": {
-      "price": 359.47,
-      "change_pct": -0.92,
+      "price": 359.42,
+      "change_pct": -0.94,
       "currency": "USD"
     },
     "AVGO": {
