@@ -4,7 +4,7 @@
     "price": 223.96
   },
   "PLTR": {
-    "zone": "entry_zone",
-    "price": 170.56
+    "zone": null,
+    "price": 175.12
   }
 }
