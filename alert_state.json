@@ -12,7 +12,7 @@
     "price": 394.05
   },
   "MSFT": {
-    "zone": "entry_zone",
-    "price": 479.58
+    "zone": null,
+    "price": 481.4
   }
 }
