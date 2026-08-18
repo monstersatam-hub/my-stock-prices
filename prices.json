@@ -1,29 +1,29 @@
 {
-  "updated": "2026-08-18T11:59:04.470696+00:00",
+  "updated": "2026-08-18T14:08:17.611806+00:00",
   "prices": {
     "NVDA": {
-      "price": NaN,
-      "change_pct": NaN,
+      "price": 219.89,
+      "change_pct": -2.34,
       "currency": "USD"
     },
     "MSFT": {
-      "price": NaN,
-      "change_pct": NaN,
+      "price": 481.39,
+      "change_pct": -2.83,
       "currency": "USD"
     },
     "V": {
-      "price": NaN,
-      "change_pct": NaN,
+      "price": 364.54,
+      "change_pct": 0.11,
       "currency": "USD"
     },
     "AVGO": {
-      "price": NaN,
-      "change_pct": NaN,
+      "price": 378.98,
+      "change_pct": -3.56,
       "currency": "USD"
     },
     "PLTR": {
-      "price": NaN,
-      "change_pct": NaN,
+      "price": 174.55,
+      "change_pct": 0.29,
       "currency": "USD"
     },
     "ADVANC": {
