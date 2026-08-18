@@ -8,8 +8,8 @@
     "price": 175.12
   },
   "AVGO": {
-    "zone": "entry_zone",
-    "price": 381.61
+    "zone": null,
+    "price": 378.6
   },
   "MSFT": {
     "zone": null,
