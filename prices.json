@@ -1,11 +1,6 @@
 {
-  "updated": "2026-08-18T07:59:08.547361+00:00",
+  "updated": "2026-08-18T09:53:10.382016+00:00",
   "prices": {
-    "NVDA": {
-      "price": NaN,
-      "change_pct": NaN,
-      "currency": "USD"
-    },
     "MSFT": {
       "price": NaN,
       "change_pct": NaN,
@@ -32,13 +27,13 @@
       "currency": "THB"
     },
     "DELTA": {
-      "price": 273.0,
-      "change_pct": -1.44,
+      "price": 271.0,
+      "change_pct": -2.17,
       "currency": "THB"
     },
     "KCE": {
-      "price": 54.0,
-      "change_pct": 2.37,
+      "price": 53.5,
+      "change_pct": 1.42,
       "currency": "THB"
     }
   }
