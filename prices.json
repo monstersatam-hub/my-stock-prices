@@ -1,11 +1,6 @@
 {
-  "updated": "2026-08-22T05:04:48.461663+00:00",
+  "updated": "2026-08-22T07:45:53.128911+00:00",
   "prices": {
-    "NVDA": {
-      "price": 214.72,
-      "change_pct": -0.98,
-      "currency": "USD"
-    },
     "MSFT": {
       "price": 483.24,
       "change_pct": 0.43,
