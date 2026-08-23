@@ -14,5 +14,9 @@
   "MSFT": {
     "zone": null,
     "price": 481.4
+  },
+  "UBER": {
+    "zone": "entry_zone",
+    "price": 78.8
   }
 }
