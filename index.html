@@ -120,7 +120,7 @@ var SEED_JOURNAL = [
    risk:'MSFT และ V ให้ Risk/Reward ต่ำกว่า 1:2 ที่ราคาปัจจุบัน ควรรอ Pullback ก่อนเพิ่ม Position'}
 ];
 
-var state = {regime:null, watchlist:null, portfolio:null, journal:null, liveFeedUrl:'', liveData:{}, liveUpdated:'', entryExit:null, supabaseUrl:DEFAULT_SUPABASE_URL, supabaseKey:DEFAULT_SUPABASE_KEY};
+var state = {regime:null, watchlist:null, portfolio:null, journal:null, liveFeedUrl:'', liveData:{}, liveUpdated:'', entryExit:null, supabaseUrl:DEFAULT_SUPABASE_URL, supabaseKey:DEFAULT_SUPABASE_KEY, fx:{}};
 
 function getEntryExitFor(id){
   if(!state.entryExit) state.entryExit = {};
@@ -294,7 +294,8 @@ function viewWatchlist(){
     }).join('');
     return '<div class="card">'+
       '<button class="del-x" onclick="window.__ledgerDeleteStock(\''+s.id+'\')" aria-label="ลบ">✕</button>'+
-      '<div class="card-head"><div><span class="ticker-badge">'+escapeHtml(s.ticker)+'</span><span class="tag">'+escapeHtml(s.market)+'</span><span class="tag">'+escapeHtml(s.type)+'</span>'+liveBadge(s.ticker)+'</div>'+
+      '<div class="card-head"><div><span class="ticker-badge">'+escapeHtml(s.ticker)+'</span> '+
+        marketSelect(s)+' '+typeSelect(s)+' '+liveBadge(s.ticker)+'</div>'+
       '<span class="stamp '+v.cls+'">'+v.label+'</span></div>'+
       '<div class="total-line">Score: <span class="total-num">'+total+'</span> / 100</div>'+
       '<div class="bar-track"><div class="bar-fill" style="width:'+total+'%;"></div></div>'+
@@ -303,6 +304,26 @@ function viewWatchlist(){
   }).join('');
   return html + '<button class="btn-add" onclick="window.__ledgerAddStock()">+ เพิ่มหุ้นใหม่ในรายการ</button>';
 }
+function marketSelect(s){
+  var opts = ['US','TH'].map(function(m){
+    return '<option value="'+m+'"'+(s.market===m?' selected':'')+'>'+m+'</option>';
+  }).join('');
+  return '<select class="tag" style="cursor:pointer;" onchange="window.__ledgerStockFieldUpdate(\''+s.id+'\',\'market\',this.value)">'+opts+'</select>';
+}
+function typeSelect(s){
+  var types = ['Core','Growth','Value'];
+  var opts = types.map(function(t){
+    return '<option value="'+t+'"'+(s.type===t?' selected':'')+'>'+t+'</option>';
+  }).join('');
+  return '<select class="tag" style="cursor:pointer;" onchange="window.__ledgerStockFieldUpdate(\''+s.id+'\',\'type\',this.value)">'+opts+'</select>';
+}
+window.__ledgerStockFieldUpdate = function(id,field,val){
+  var s = state.watchlist.find(function(x){return x.id===id;});
+  if(!s) return;
+  s[field] = val;
+  saveKey('watchlist', state.watchlist);
+  renderTabContent();
+};
 window.__ledgerPillarUpdate = function(id,key,val){
   var s = state.watchlist.find(function(x){return x.id===id;});
   if(!s) return;
@@ -318,8 +339,9 @@ window.__ledgerDeleteStock = function(id){
 window.__ledgerAddStock = function(){
   var ticker = prompt('ชื่อหุ้น (Ticker):');
   if(!ticker) return;
+  var isThai = confirm('เป็นหุ้นไทยใช่ไหม? (กด OK = หุ้นไทย, Cancel = หุ้นสหรัฐ)');
   var id = 'stk_'+Date.now();
-  state.watchlist.push({id:id, ticker:ticker.toUpperCase(), market:'US', type:'Growth', pillars:{biz:0,fin:0,growth:0,val:0,tech:0,mgmt:0,macro:0}});
+  state.watchlist.push({id:id, ticker:ticker.toUpperCase(), market:(isThai?'TH':'US'), type:'Growth', pillars:{biz:0,fin:0,growth:0,val:0,tech:0,mgmt:0,macro:0}});
   saveKey('watchlist', state.watchlist);
   renderTabContent();
 };
@@ -444,10 +466,24 @@ window.__ledgerSyncAlertToSupabase = async function(){
   }
 };
 
+function toUSD(amount, currency){
+  amount = Number(amount)||0;
+  if(currency==='THB'){
+    var rate = state.fx && state.fx.usd_thb;
+    if(rate) return amount / rate;
+    return amount; // ไม่มีอัตราแลกเปลี่ยน — คงค่าไว้เฉยๆ (ควร Sync ก่อน)
+  }
+  return amount;
+}
 function viewPortfolio(){
+  var fxRate = state.fx && state.fx.usd_thb;
   var totalHold = 0, totalCost = 0;
-  state.portfolio.forEach(function(p){ totalHold += Number(p.holding)||0; totalCost += Number(p.cost)||0; });
+  state.portfolio.forEach(function(p){
+    totalHold += toUSD(p.holding, p.currency);
+    totalCost += toUSD(p.cost, p.currency);
+  });
   var totalPl = totalCost>0 ? ((totalHold-totalCost)/totalCost*100) : 0;
+  var hasThai = state.portfolio.some(function(p){ return p.currency==='THB'; });
   var settingsCard = '<div class="card">'+
     '<span class="lbl">Live Feed URL (JSON จาก GitHub Actions)</span>'+
     '<div class="row" style="margin-top:6px;">'+
@@ -455,15 +491,19 @@ function viewPortfolio(){
       '<button class="btn" style="flex:1;min-width:100px;" onclick="window.__ledgerSyncLive()">Sync ราคาล่าสุด</button>'+
     '</div>'+
     '<p class="ledger-sub" id="live-sync-status" style="margin-top:6px;">'+(state.liveUpdated?('อัปเดตล่าสุด: '+state.liveUpdated):'ยังไม่เคย Sync — ใส่จำนวนหุ้น (Shares) ในแต่ละ Holding ก่อน แล้วกด Sync')+'</p>'+
+    (hasThai ? '<p class="ledger-sub" style="margin-top:4px;">อัตราแลกเปลี่ยน USD/THB: '+(fxRate?('฿'+fmt(fxRate,2)+' ต่อ $1'):'ยังไม่มีข้อมูล — กด Sync เพื่อดึงอัตราล่าสุด')+'</p>' : '')+
   '</div>';
   var summary = '<div class="summary-strip">'+
-    '<div class="summary-box"><span class="lbl">มูลค่ารวม</span><div class="val">$'+fmt(totalHold)+'</div></div>'+
-    '<div class="summary-box"><span class="lbl">ต้นทุนรวม</span><div class="val">$'+fmt(totalCost)+'</div></div>'+
+    '<div class="summary-box"><span class="lbl">มูลค่ารวม (USD)</span><div class="val">$'+fmt(totalHold)+'</div></div>'+
+    '<div class="summary-box"><span class="lbl">ต้นทุนรวม (USD)</span><div class="val">$'+fmt(totalCost)+'</div></div>'+
     '<div class="summary-box"><span class="lbl">Unrealized P/L</span><div class="val">'+(totalPl>=0?'+':'')+fmt(totalPl,1)+'%</div></div>'+
   '</div>';
   var cards = state.portfolio.map(function(p){
+    var cur = p.currency || 'USD';
+    var sym = cur==='THB' ? '฿' : '$';
     var pl = (Number(p.cost)>0) ? ((p.holding-p.cost)/p.cost*100) : 0;
-    var weight = totalHold>0 ? (p.holding/totalHold*100) : 0;
+    var usdValue = toUSD(p.holding, cur);
+    var weight = totalHold>0 ? (usdValue/totalHold*100) : 0;
     var over = weight > 15;
     var live = state.liveData[p.ticker];
     return '<div class="card">'+
@@ -471,10 +511,17 @@ function viewPortfolio(){
       '<div class="card-head"><span class="ticker-badge">'+escapeHtml(p.ticker)+'</span>'+
         '<span>'+(over?'<span class="warn-badge">Weight เกิน 15%</span> ':'')+'<span class="tag">'+fmt(weight,1)+'%</span></span></div>'+
       (live ? '<p class="ledger-sub" style="margin:4px 0 0;">ราคาสด: '+(live.currency==='THB'?'฿':'$')+fmt(live.price,2)+' ('+(live.change_pct>=0?'+':'')+fmt(live.change_pct,2)+'%)</p>' : '')+
+      (cur==='THB' ? '<p class="ledger-sub" style="margin:2px 0 0;">≈ $'+fmt(usdValue,2)+' USD</p>' : '')+
       '<div class="row" style="margin-top:8px;">'+
+        '<div><span class="lbl">สกุลเงิน</span><select class="field" onchange="window.__ledgerPfCurrencyUpdate(\''+p.id+'\',this.value)">'+
+          '<option value="USD"'+(cur==='USD'?' selected':'')+'>USD ($)</option>'+
+          '<option value="THB"'+(cur==='THB'?' selected':'')+'>THB (฿)</option>'+
+        '</select></div>'+
         '<div><span class="lbl">จำนวนหุ้น (Shares)</span><input class="field" type="number" min="0" step="0.0001" value="'+(p.shares||0)+'" onchange="window.__ledgerPfUpdate(\''+p.id+'\',\'shares\',this.value)"></div>'+
-        '<div><span class="lbl">มูลค่าปัจจุบัน (USD)</span><input class="field" type="number" step="0.01" value="'+p.holding+'" onchange="window.__ledgerPfUpdate(\''+p.id+'\',\'holding\',this.value)"></div>'+
-        '<div><span class="lbl">ต้นทุน (USD)</span><input class="field" type="number" step="0.01" value="'+p.cost+'" onchange="window.__ledgerPfUpdate(\''+p.id+'\',\'cost\',this.value)"></div>'+
+      '</div>'+
+      '<div class="row" style="margin-top:8px;">'+
+        '<div><span class="lbl">มูลค่าปัจจุบัน ('+cur+')</span><input class="field" type="number" step="0.01" value="'+p.holding+'" onchange="window.__ledgerPfUpdate(\''+p.id+'\',\'holding\',this.value)"></div>'+
+        '<div><span class="lbl">ต้นทุน ('+cur+')</span><input class="field" type="number" step="0.01" value="'+p.cost+'" onchange="window.__ledgerPfUpdate(\''+p.id+'\',\'cost\',this.value)"></div>'+
       '</div>'+
       '<div class="total-line">P/L: <span class="total-num" style="color:'+(pl>=0?'#2E6F52':'#9C3B2E')+';">'+(pl>=0?'+':'')+fmt(pl,2)+'%</span></div>'+
     '</div>';
@@ -491,8 +538,9 @@ async function doSync(url){
     state.liveData = json.prices;
     state.liveUpdated = json.updated || new Date().toISOString();
     state.liveFeedUrl = url;
+    state.fx = json.fx || state.fx || {};
     saveKey('liveFeedUrl', url);
-    saveKey('livePricesCache', {prices:state.liveData, updated:state.liveUpdated});
+    saveKey('livePricesCache', {prices:state.liveData, updated:state.liveUpdated, fx:state.fx});
     state.portfolio.forEach(function(p){
       var live = state.liveData[p.ticker];
       if(live && Number(p.shares) > 0){
@@ -528,6 +576,13 @@ window.__ledgerPfUpdate = function(id,field,val){
   saveKey('portfolio', state.portfolio);
   renderTabContent();
 };
+window.__ledgerPfCurrencyUpdate = function(id,val){
+  var p = state.portfolio.find(function(x){return x.id===id;});
+  if(!p) return;
+  p.currency = val;
+  saveKey('portfolio', state.portfolio);
+  renderTabContent();
+};
 window.__ledgerDeletePf = function(id){
   state.portfolio = state.portfolio.filter(function(x){return x.id!==id;});
   saveKey('portfolio', state.portfolio);
@@ -536,7 +591,8 @@ window.__ledgerDeletePf = function(id){
 window.__ledgerAddPf = function(){
   var ticker = prompt('ชื่อหุ้น (Ticker):');
   if(!ticker) return;
-  state.portfolio.push({id:'pf_'+Date.now(), ticker:ticker.toUpperCase(), holding:0, cost:0, shares:0});
+  var isThai = confirm('เป็นหุ้นไทยใช่ไหม? (กด OK = หุ้นไทย/THB, Cancel = หุ้นสหรัฐ/USD)');
+  state.portfolio.push({id:'pf_'+Date.now(), ticker:ticker.toUpperCase(), holding:0, cost:0, shares:0, currency:(isThai?'THB':'USD')});
   saveKey('portfolio', state.portfolio);
   renderTabContent();
 };
@@ -599,7 +655,8 @@ window.__ledgerReset = function(){
   saveKey('portfolio', state.portfolio);
   saveKey('journal', state.journal);
   saveKey('liveFeedUrl', DEFAULT_LIVE_FEED_URL);
-  saveKey('livePricesCache', {prices:{}, updated:''});
+  state.fx = {};
+  saveKey('livePricesCache', {prices:{}, updated:'', fx:{}});
   saveKey('entryExit', {});
   renderTabRail();
   renderTabContent();
@@ -609,12 +666,14 @@ async function init(){
   state.regime = await loadKey('regime', SEED_REGIME);
   state.watchlist = await loadKey('watchlist', SEED_WATCHLIST);
   state.portfolio = await loadKey('portfolio', SEED_PORTFOLIO);
+  state.portfolio.forEach(function(p){ if(!p.currency) p.currency = 'USD'; });
   state.journal = await loadKey('journal', SEED_JOURNAL);
   state.liveFeedUrl = await loadKey('liveFeedUrl', DEFAULT_LIVE_FEED_URL);
   state.entryExit = await loadKey('entryExit', {});
-  var cache = await loadKey('livePricesCache', {prices:{}, updated:''});
+  var cache = await loadKey('livePricesCache', {prices:{}, updated:'', fx:{}});
   state.liveData = cache.prices || {};
   state.liveUpdated = cache.updated || '';
+  state.fx = cache.fx || {};
   renderTabRail();
   renderTabContent();
   var modeEl = document.getElementById('storage-mode-note');

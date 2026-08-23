@@ -87,12 +87,30 @@ def fetch_all(tickers):
     return data
 
 
+def fetch_fx_rate():
+    """ดึงอัตราแลกเปลี่ยน USD/THB (กี่บาทต่อ 1 ดอลลาร์) สำหรับแปลงมูลค่าหุ้นไทยในพอร์ต"""
+    try:
+        tk = yf.Ticker("THB=X")
+        hist = tk.history(period="5d")
+        if hist.empty:
+            print("warn: no FX data", file=sys.stderr)
+            return None
+        rate = float(hist["Close"].iloc[-1])
+        print(f"ok: USD/THB = {rate}")
+        return round(rate, 4)
+    except Exception as e:
+        print(f"error fetching FX rate: {e}", file=sys.stderr)
+        return None
+
+
 def main():
     tickers = load_watchlist_tickers()
     prices = fetch_all(tickers)
+    fx = fetch_fx_rate()
     payload = {
         "updated": datetime.now(timezone.utc).isoformat(),
         "prices": prices,
+        "fx": {"usd_thb": fx} if fx else {},
     }
     with open("prices.json", "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
