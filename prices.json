@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-31T08:07:45.662067+00:00",
+  "updated": "2026-08-31T09:07:29.372057+00:00",
   "prices": {
     "NVDA": {
       "price": 217.55,
@@ -37,17 +37,17 @@
       "currency": "THB"
     },
     "DELTA": {
-      "price": 248.0,
-      "change_pct": 0.81,
+      "price": 249.0,
+      "change_pct": 1.22,
       "currency": "THB"
     },
     "KCE": {
-      "price": 60.0,
-      "change_pct": 5.26,
+      "price": 60.25,
+      "change_pct": 5.7,
       "currency": "THB"
     }
   },
   "fx": {
-    "usd_thb": 33.09
+    "usd_thb": 33.12
   }
 }
