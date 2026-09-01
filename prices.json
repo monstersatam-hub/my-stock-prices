@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-01T02:12:53.743470+00:00",
+  "updated": "2026-09-01T03:14:17.523901+00:00",
   "prices": {
     "NVDA": {
       "price": 220.78,
@@ -13,7 +13,7 @@
     },
     "V": {
       "price": 379.37,
-      "change_pct": -0.58,
+      "change_pct": -0.08,
       "currency": "USD"
     },
     "AVGO": {
@@ -28,7 +28,7 @@
     },
     "UBER": {
       "price": 75.65,
-      "change_pct": -4.02,
+      "change_pct": -1.69,
       "currency": "USD"
     },
     "ADVANC": {
@@ -48,6 +48,6 @@
     }
   },
   "fx": {
-    "usd_thb": 33.16
+    "usd_thb": 33.15
   }
 }
