@@ -1,53 +1,53 @@
 {
-  "updated": "2026-09-04T16:14:53.151338+00:00",
+  "updated": "2026-09-04T17:13:04.702287+00:00",
   "prices": {
     "NVDA": {
-      "price": 231.12,
-      "change_pct": 1.17,
+      "price": 231.07,
+      "change_pct": 1.15,
       "currency": "USD"
     },
     "MSFT": {
-      "price": 501.3,
-      "change_pct": -1.73,
+      "price": 500.74,
+      "change_pct": -1.84,
       "currency": "USD"
     },
     "V": {
-      "price": 376.05,
-      "change_pct": -0.71,
+      "price": 376.47,
+      "change_pct": -0.6,
       "currency": "USD"
     },
     "AVGO": {
-      "price": 355.82,
-      "change_pct": -0.38,
+      "price": 355.6,
+      "change_pct": -0.44,
       "currency": "USD"
     },
     "PLTR": {
-      "price": 175.34,
-      "change_pct": -3.94,
+      "price": 174.76,
+      "change_pct": -4.26,
       "currency": "USD"
     },
     "UBER": {
-      "price": 75.74,
-      "change_pct": -0.29,
+      "price": 75.76,
+      "change_pct": -0.26,
       "currency": "USD"
     },
     "ADVANC": {
-      "price": 346.0,
-      "change_pct": 0.58,
+      "price": NaN,
+      "change_pct": NaN,
       "currency": "THB"
     },
     "DELTA": {
-      "price": 256.0,
-      "change_pct": 5.35,
+      "price": NaN,
+      "change_pct": NaN,
       "currency": "THB"
     },
     "KCE": {
-      "price": 57.25,
-      "change_pct": 0.0,
+      "price": NaN,
+      "change_pct": NaN,
       "currency": "THB"
     }
   },
   "fx": {
-    "usd_thb": 32.87
+    "usd_thb": 32.88
   }
 }
