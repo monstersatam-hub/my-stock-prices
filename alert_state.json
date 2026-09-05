@@ -16,7 +16,7 @@
     "price": 481.4
   },
   "UBER": {
-    "zone": null,
-    "price": NaN
+    "zone": "entry_zone",
+    "price": 75.76
   }
 }
