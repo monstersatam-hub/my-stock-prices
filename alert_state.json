@@ -8,15 +8,15 @@
     "price": 174.97
   },
   "AVGO": {
-    "zone": null,
-    "price": NaN
+    "zone": "stop_loss",
+    "price": 339.27
   },
   "MSFT": {
     "zone": null,
     "price": 481.4
   },
   "UBER": {
-    "zone": null,
-    "price": NaN
+    "zone": "entry_zone",
+    "price": 71.43
   }
 }
