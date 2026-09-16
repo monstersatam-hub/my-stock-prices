@@ -4,12 +4,12 @@
     "price": 223.96
   },
   "PLTR": {
-    "zone": "entry_zone",
-    "price": 171.77
+    "zone": null,
+    "price": 174.01
   },
   "AVGO": {
-    "zone": null,
-    "price": 341.61
+    "zone": "stop_loss",
+    "price": 339.02
   },
   "MSFT": {
     "zone": null,
