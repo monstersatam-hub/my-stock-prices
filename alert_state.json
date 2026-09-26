@@ -18,5 +18,9 @@
   "UBER": {
     "zone": null,
     "price": 69.88
+  },
+  "ADVANC": {
+    "zone": "entry_zone",
+    "price": 345.0
   }
 }
