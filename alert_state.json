@@ -4,8 +4,8 @@
     "price": 223.96
   },
   "PLTR": {
-    "zone": null,
-    "price": 189.67
+    "zone": "target",
+    "price": 190.04
   },
   "AVGO": {
     "zone": null,
