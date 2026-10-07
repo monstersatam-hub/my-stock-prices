@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-06T21:29:12.973541+00:00",
+  "updated": "2026-10-07T01:16:55.246559+00:00",
   "prices": {
     "NVDA": {
       "price": 239.24,
@@ -22,13 +22,13 @@
       "currency": "USD"
     },
     "PLTR": {
-      "price": 192.07,
-      "change_pct": 1.41,
+      "price": NaN,
+      "change_pct": NaN,
       "currency": "USD"
     },
     "UBER": {
-      "price": 69.08,
-      "change_pct": -0.58,
+      "price": NaN,
+      "change_pct": NaN,
       "currency": "USD"
     },
     "ADVANC": {
@@ -48,6 +48,6 @@
     }
   },
   "fx": {
-    "usd_thb": 33.55
+    "usd_thb": 33.6
   }
 }
