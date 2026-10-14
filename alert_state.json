@@ -4,8 +4,8 @@
     "price": 223.96
   },
   "PLTR": {
-    "zone": null,
-    "price": NaN
+    "zone": "target",
+    "price": 208.67
   },
   "AVGO": {
     "zone": null,
@@ -16,8 +16,8 @@
     "price": 481.4
   },
   "UBER": {
-    "zone": null,
-    "price": NaN
+    "zone": "entry_zone",
+    "price": 71.32
   },
   "ADVANC": {
     "zone": "entry_zone",
