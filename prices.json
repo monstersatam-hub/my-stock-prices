@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-19T23:28:18.963042+00:00",
+  "updated": "2026-10-20T04:10:30.446805+00:00",
   "prices": {
     "NVDA": {
       "price": 217.09,
@@ -32,22 +32,22 @@
       "currency": "USD"
     },
     "ADVANC": {
-      "price": 334.0,
-      "change_pct": 0.0,
+      "price": 331.0,
+      "change_pct": -0.9,
       "currency": "THB"
     },
     "DELTA": {
-      "price": 252.0,
-      "change_pct": 0.4,
+      "price": 249.0,
+      "change_pct": -1.19,
       "currency": "THB"
     },
     "KCE": {
-      "price": 72.0,
-      "change_pct": -3.68,
+      "price": 73.5,
+      "change_pct": 2.08,
       "currency": "THB"
     }
   },
   "fx": {
-    "usd_thb": 33.55
+    "usd_thb": 33.57
   }
 }
