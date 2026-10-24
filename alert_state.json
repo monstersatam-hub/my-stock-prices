@@ -4,12 +4,12 @@
     "price": 223.96
   },
   "PLTR": {
-    "zone": null,
-    "price": NaN
+    "zone": "target",
+    "price": 196.75
   },
   "AVGO": {
-    "zone": null,
-    "price": NaN
+    "zone": "stop_loss",
+    "price": 321.68
   },
   "MSFT": {
     "zone": null,
@@ -24,7 +24,7 @@
     "price": 332.0
   },
   "V": {
-    "zone": null,
-    "price": NaN
+    "zone": "target",
+    "price": 407.92
   }
 }
