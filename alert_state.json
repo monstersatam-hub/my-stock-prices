@@ -4,27 +4,27 @@
     "price": 223.96
   },
   "PLTR": {
-    "zone": null,
-    "price": NaN
+    "zone": "entry_zone",
+    "price": 169.2
   },
   "AVGO": {
-    "zone": null,
-    "price": NaN
+    "zone": "stop_loss",
+    "price": 319.48
   },
   "MSFT": {
     "zone": null,
     "price": 481.4
   },
   "UBER": {
-    "zone": null,
-    "price": NaN
+    "zone": "entry_zone",
+    "price": 71.17
   },
   "ADVANC": {
     "zone": null,
     "price": 332.0
   },
   "V": {
-    "zone": null,
-    "price": NaN
+    "zone": "target",
+    "price": 422.16
   }
 }
