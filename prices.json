@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-18T21:11:52.969259+00:00",
+  "updated": "2026-11-19T03:00:01.866496+00:00",
   "prices": {
     "NVDA": {
       "price": 150.96,
@@ -12,8 +12,8 @@
       "currency": "USD"
     },
     "V": {
-      "price": 415.1,
-      "change_pct": -0.4,
+      "price": 415.22,
+      "change_pct": -0.37,
       "currency": "USD"
     },
     "AVGO": {
@@ -27,27 +27,27 @@
       "currency": "USD"
     },
     "UBER": {
-      "price": 68.77,
-      "change_pct": -0.06,
+      "price": 68.76,
+      "change_pct": -0.07,
       "currency": "USD"
     },
     "ADVANC": {
-      "price": NaN,
-      "change_pct": NaN,
+      "price": 340.0,
+      "change_pct": 0.29,
       "currency": "THB"
     },
     "DELTA": {
-      "price": NaN,
-      "change_pct": NaN,
+      "price": 179.0,
+      "change_pct": 0.85,
       "currency": "THB"
     },
     "KCE": {
-      "price": NaN,
-      "change_pct": NaN,
+      "price": 55.0,
+      "change_pct": 3.29,
       "currency": "THB"
     }
   },
   "fx": {
-    "usd_thb": 33.95
+    "usd_thb": 33.98
   }
 }
