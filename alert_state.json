@@ -8,8 +8,8 @@
     "price": 144.87
   },
   "AVGO": {
-    "zone": null,
-    "price": NaN
+    "zone": "stop_loss",
+    "price": 304.41
   },
   "MSFT": {
     "zone": null,
