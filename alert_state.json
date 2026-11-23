@@ -4,8 +4,8 @@
     "price": 223.96
   },
   "PLTR": {
-    "zone": null,
-    "price": 144.87
+    "zone": "entry_zone",
+    "price": 159.36
   },
   "AVGO": {
     "zone": "stop_loss",
@@ -24,7 +24,7 @@
     "price": 332.0
   },
   "V": {
-    "zone": null,
-    "price": NaN
+    "zone": "target",
+    "price": 409.61
   }
 }
